@@ -297,7 +297,6 @@ export default class Staticman {
 
   _generateReviewBody(fields) {
     const table = [['Field', 'Content']];
-
     Object.keys(fields).forEach((field) => {
       table.push([field, fields[field]]);
     });
@@ -314,7 +313,6 @@ export default class Staticman {
 
       message += `\n\n<!--staticman_notification:${JSON.stringify(notificationsPayload)}-->`;
     }
-
     return message;
   }
 
@@ -550,17 +548,17 @@ export default class Staticman {
         const subscriptions = this._initialiseSubscriptions();
         const commitMessage = this._resolvePlaceholders(this.siteConfig.get('commitMessage'), {
           fields,
-          options,
+          options: this.options,
         });
 
         // Subscribe user, if applicable
         if (
           subscriptions &&
-          options.parent &&
-          options.subscribe &&
-          this.fields[options.subscribe]
+          this.options.parent &&
+          this.options.subscribe &&
+          this.fields[this.options.subscribe]
         ) {
-          subscriptions.set(options.parent, this.fields[options.subscribe]).catch((err) => {
+          subscriptions.set(this.options.parent, this.fields[this.options.subscribe]).catch((err) => {
             console.log(err.stack || err);
           });
         }
@@ -576,16 +574,15 @@ export default class Staticman {
             this._generateReviewBody(fields)
           );
         }
-        if (subscriptions && options.parent) {
-          subscriptions.send(options.parent, fields, options, this.siteConfig);
+        if (subscriptions && this.options.parent) {
+          subscriptions.send(this.options.parent, fields, this.options, this.siteConfig);
         }
-
         return this.git.writeFile(filePath, data, this.parameters.branch, commitMessage);
       })
       .then(() => {
         return {
           fields,
-          redirect: options.redirect ? options.redirect : false,
+          redirect: this.options.redirect ? this.options.redirect : false,
         };
       })
       .catch((err) => {
@@ -606,7 +603,7 @@ export default class Staticman {
       .then(() => {
         const subscriptions = this._initialiseSubscriptions();
 
-        return subscriptions.send(options.parent, fields, options, this.siteConfig);
+        return subscriptions.send(this.options.parent, fields, this.options, this.siteConfig);
       })
       .catch((err) => {
         return Promise.reject(
